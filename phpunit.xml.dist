@@ -32,6 +32,7 @@
     <testsuites>
         <testsuite name="Gaufrette Test Suite">
             <directory>./tests</directory>
+            <!--<file>./tests/Gaufrette/Functional/Adapter/Memcached.php</file>-->
         </testsuite>
     </testsuites>
     <filter>

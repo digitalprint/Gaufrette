@@ -3,62 +3,44 @@
 namespace Gaufrette\Adapter;
 use Gaufrette\Adapter;
 
-/**
- * Die Konfiguration sollte woanders liegen.
- * Die AMAZON_CACHE_CLUSTER Adresse ist der Endpoint des Clusters, nicht der Nodes
- */
 //define(AMAZON_CACHE_CLUSTER, "ppapicache.uuv8rv.0001.euw1.cache.amazonaws.com");
-define(AMAZON_CACHE_CLUSTER, "ppapicache.uuv8rv.cfg.euw1.cache.amazonaws.com");
-define(AMAZON_CACHE_PORT, 11211);
-
+//define(AMAZON_CACHE_CLUSTER, "ppapicache.uuv8rv.cfg.euw1.cache.amazonaws.com");
+//define(AMAZON_CACHE_PORT, 11211);
 
 /**
  * Gaufrette Memcached Adapter
  */
-class Memcached implements Adapter, MetadataSupporter
+class Memcached implements Adapter
 {
-  protected	$memcached;
 
-	/**
-	 * Konstruktion
-	 * @param $server
-	 * @param $port
-	 */
+    /**
+     * @var \Memcached
+     */
+    protected	$memCached = null;
 
-	public function __construct($persitent_id = "")
+
+    /**
+     * @param \Memcached $memCached
+     */
+	public function __construct(\Memcached $memCached)
 	{
-		if(strlen($persitent_id) == 0)
-		{
-			$this->memcached = new \Memcached();
-		}
-		else
-		{
-			$this->memcached = new \Memcached($persistent_id);
-		}
-
-		/**
-		 * DYNAMIC_CLIENT_MODE findet die Amazon Nodes automatisch
-		 */
-		$this->memcached->setOption(Memcached::OPT_CLIENT_MODE, Memcached::DYNAMIC_CLIENT_MODE);
-
-		/**
-		 * Es wird nur der Endpoint des Cluster hinzugefügt
-		 */
-		$this->memcached->addServer(AMAZON_CACHE_CLUSTER, AMAZON_CACHE_PORT);
+        $this->memCached = $memCached;
 	}
 
-	/**
-	 * @param string $key
-	 * @param null $cache_cb
-	 * @param float $cas_token
-	 * @return bool|mixed|string
-	 */
+
+    /**
+     * @param string $key
+     * @param null $cache_cb
+     * @param float|\Gaufrette\Adapter\float $cas_token
+     * @return bool|mixed|string
+     */
 	public function read($key, $cache_cb = NULL, float &$cas_token = NULL)
 	{
-		$result = $this->memcached->get($key, $cache_cb, $cas_token);
+		$result = $this->memCached->get($key, $cache_cb, $cas_token);
 
 		return $result;
 	}
+
 
 	/**
 	 * @param string $key
@@ -68,10 +50,12 @@ class Memcached implements Adapter, MetadataSupporter
 	 */
 	public function write($key, $value, $expiration = 0)
 	{
-		$result = $this->memcached->set($key, $value, $expiration);
+
+		$result = $this->memCached->set($key, $value, $expiration);
 
 		return $result;
 	}
+
 
 	/**
 	 * Indicates whether the file exists
@@ -80,17 +64,15 @@ class Memcached implements Adapter, MetadataSupporter
 	 */
 	public function exists($key)
 	{
-		$result = $this->memcached->get($key);
+		$result = $this->memCached->get($key);
 
-		if($result === false)
-		{
+		if($result === false) {
 			return false;
 		}
-		else
-		{
-			return true;
-		}
+
+		return true;
 	}
+
 
 	/**
 	 * Returns an array of all keys (files and directories)
@@ -98,9 +80,10 @@ class Memcached implements Adapter, MetadataSupporter
 	 */
 	public function keys()
 	{
-		$result = array();
+		$result = $this->memCached->getAllKeys();
 		return $result;
 	}
+
 
 	/**
 	 * Returns the last modified time
@@ -109,8 +92,9 @@ class Memcached implements Adapter, MetadataSupporter
 	 */
 	public function mtime($key)
 	{
-		return false;
+		return time();
 	}
+
 
 	/**
 	 * Deletes the file
@@ -119,8 +103,9 @@ class Memcached implements Adapter, MetadataSupporter
 	 */
 	public function delete($key)
 	{
-		return $this->memcached->delete($key);
+		return $this->memCached->delete($key);
 	}
+
 
 	/**
 	 * Renames a file
@@ -130,10 +115,12 @@ class Memcached implements Adapter, MetadataSupporter
 	 */
 	public function rename($sourceKey, $targetKey)
 	{
-		$var = $this->memcached->get($sourceKey);
-		$this->memcached->set($targetKey, $var);
-		$this->memcached->delete($sourceKey);
+		$var = $this->memCached->get($sourceKey);
+		$this->memCached->set($targetKey, $var);
+		$result = $this->memCached->delete($sourceKey);
+        return $result;
 	}
+
 
 	/**
 	 * Check if key is directory
@@ -145,21 +132,4 @@ class Memcached implements Adapter, MetadataSupporter
 		return false;
 	}
 
-	/**
-	 * @param string $key
-	 * @param array $content
-	 */
-	public function setMetadata($key, $content)
-	{
-		// TODO: Implement setMetadata() method.
-	}
-
-	/**
-	 * @param  string $key
-	 * @return array
-	 */
-	public function getMetadata($key)
-	{
-		// TODO: Implement getMetadata() method.
-	}
 }
