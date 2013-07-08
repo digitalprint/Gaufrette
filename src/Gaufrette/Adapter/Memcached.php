@@ -3,10 +3,6 @@
 namespace Gaufrette\Adapter;
 use Gaufrette\Adapter;
 
-//define(AMAZON_CACHE_CLUSTER, "ppapicache.uuv8rv.0001.euw1.cache.amazonaws.com");
-//define(AMAZON_CACHE_CLUSTER, "ppapicache.uuv8rv.cfg.euw1.cache.amazonaws.com");
-//define(AMAZON_CACHE_PORT, 11211);
-
 /**
  * Gaufrette Memcached Adapter
  */
