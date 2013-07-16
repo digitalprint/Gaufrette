@@ -30,7 +30,7 @@ class Memcached implements Adapter
      * @param float|\Gaufrette\Adapter\float $cas_token
      * @return bool|mixed|string
      */
-	public function read($key, $cache_cb = NULL, float &$cas_token = NULL)
+	public function read($key, $cache_cb = NULL, &$cas_token = NULL)
 	{
 		$result = $this->memCached->get($key, $cache_cb, $cas_token);
 
@@ -38,16 +38,21 @@ class Memcached implements Adapter
 	}
 
 
-	/**
-	 * @param string $key
-	 * @param string $value
-	 * @param int $expiration
-	 * @return bool|int
-	 */
+    /**
+     * @param string $key
+     * @param string $value
+     * @param int $expiration
+     * @throws \RuntimeException
+     * @return bool|int
+     */
 	public function write($key, $value, $expiration = 0)
 	{
 
 		$result = $this->memCached->set($key, $value, $expiration);
+
+        if($result === false) {
+            throw new \RuntimeException(sprintf("MemCached server Fault. Result code: %s", $this->memCached->getResultCode()));
+        }
 
 		return $result;
 	}
